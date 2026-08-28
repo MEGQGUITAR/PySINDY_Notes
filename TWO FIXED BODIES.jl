@@ -19,7 +19,7 @@ a = 1   # Parámetro 'a'
 b = 1.5 # Parámetro 'b'
 # r_values son los valores iniciales de y_0 para las diferentes trayectorias
 r_values = LinRange(-3.52, 3.52, 90)
-p_points=7 # Número de puntos de px_0 para cada y_0
+p_points=11 # Número de puntos de px_0 para cada y_0
 # --- Definición de la estructura de Parámetros Mutables ---
 if !@isdefined(SimParams)
     mutable struct SimParams
@@ -92,7 +92,7 @@ end
 
 function affect_poincare!(integrator)
     # Orientación del mapa y evitar doble conteo (x=0 & px > 0)
-    if abs(integrator.u[1]) <1e-2 && integrator.u[3] > b*integrator.u[2]/2
+    if abs(integrator.u[1]) <1e-2 && integrator.u[3] >- b*integrator.u[2]/2
         current_y = integrator.u[2] # Valor de Y válido
         current_py = integrator.u[4]# Valor de PY válido
         idx_trajectory = integrator.p.idx_trajectory
@@ -140,14 +140,14 @@ function run_simulation()
     global_traj_idx = 1
     for y_0 in r_values
         x_0 = 0.0
-        discriminant = 2*En - (b^2*y_0^2)/4 - 4/safe_sqrt(a^2 + y_0^2) #discriminante para px_0 
+        discriminant = 2*En- 4/safe_sqrt(a^2 + y_0^2) #discriminante para px_0 
         if discriminant < 0
             println("Condición física no satisfecha para y_0 = $y_0. Saltando esta condición inicial.")
             continue
         end
-        PX_range=LinRange(-safe_sqrt(discriminant), safe_sqrt(discriminant), p_points)
+        PX_range=LinRange(-safe_sqrt(discriminant)-b*y_0/2, safe_sqrt(discriminant)-b*y_0/2, p_points)
         for px_0 in PX_range
-            discriminant_trajectory = 2*En - (b^2*y_0^2)/4 - 4/safe_sqrt(a^2 + y_0^2) - px_0^2 # discriminante para py_0 para cualquier valor de px_0 permitido
+            discriminant_trajectory = 2*En - (b^2*y_0^2)/4 - 4/safe_sqrt(a^2 + y_0^2) - b*y_0*px_0 - px_0^2 # discriminante para py_0 para cualquier valor de px_0 permitido
             if discriminant_trajectory < 0
                 println("Condición física no satisfecha para y_0 = $y_0, px_0 = $px_0. Saltando esta condición inicial.")
                 continue
